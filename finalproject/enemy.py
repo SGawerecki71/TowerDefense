@@ -1,0 +1,32 @@
+import pygame
+
+class Enemy:
+    def __init__(self, path):
+        self.path = path
+        self.path_index = 0
+        self.x, self.y = self.path[self.path_index]
+        self.speed = 2
+        self.radius = 10
+        self.reached_end = False
+
+    def update(self):
+        if self.path_index >= len(self.path) - 1:
+            self.reached_end = True
+            return
+
+        target_x, target_y = self.path[self.path_index + 1]
+        dx = target_x - self.x
+        dy = target_y - self.y
+        distance = (dx ** 2 + dy ** 2) ** 0.5
+
+        if distance < self.speed:
+            self.x, self.y = target_x, target_y
+            self.path_index += 1
+        else:
+            dx /= distance
+            dy /= distance
+            self.x += dx * self.speed
+            self.y += dy * self.speed
+
+    def draw(self, screen):
+        pygame.draw.circle(screen, (255, 0, 0), (int(self.x), int(self.y)), self.radius)
