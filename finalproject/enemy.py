@@ -8,6 +8,8 @@ class Enemy:
         self.speed = 2
         self.radius = 10
         self.reached_end = False
+        self.max_health = 100
+        self.health = 100
 
     def update(self):
         if self.path_index >= len(self.path) - 1:
@@ -30,3 +32,10 @@ class Enemy:
 
     def draw(self, screen):
         pygame.draw.circle(screen, (255, 0, 0), (int(self.x), int(self.y)), self.radius)
+
+        bar_width = 20
+        bar_height = 4
+        health_ratio = self.health / self.max_health
+        pygame.draw.rect(screen, (255, 0, 0), (self.x - bar_width // 2, self.y - 20, bar_width, bar_height))
+        pygame.draw.rect(screen, (0, 255, 0), (self.x - bar_width // 2, self.y - 20, bar_width * health_ratio, bar_height))
+

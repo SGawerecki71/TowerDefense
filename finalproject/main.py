@@ -2,24 +2,21 @@ import pygame
 import sys
 from enemy import Enemy
 from tower import Tower
+from projectile import Projectile
 
-# --- Game Config ---
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 GRID_SIZE = 40
 
-# --- Colors ---
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
 BACKGROUND_COLOR = (30, 30, 30)
 
-# --- Initialize ---
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tower Defense")
 clock = pygame.time.Clock()
 
-# --- Functions ---
 def draw_grid():
     for x in range(0, SCREEN_WIDTH, GRID_SIZE):
         pygame.draw.line(screen, GRAY, (x, 0), (x, SCREEN_HEIGHT))
@@ -41,19 +38,36 @@ def main():
     path = build_path()
     enemies = [Enemy(path)]
     towers = []
+    spawn_timer = 0
+    spawn_interval = 120  
+    projectiles = []
 
     while running:
         screen.fill(BACKGROUND_COLOR)
         draw_grid()
 
-        # Update & draw enemies
+        spawn_timer += 1
+        if spawn_timer >= spawn_interval:
+            enemies.append(Enemy(path))
+            spawn_timer = 0
+
         for enemy in enemies:
             enemy.update()
             enemy.draw(screen)
 
-        # Draw towers
         for tower in towers:
+            proj = tower.update(enemies)
+            if proj:
+                projectiles.append(proj)
             tower.draw(screen)
+
+        for proj in projectiles:
+            proj.update()
+            proj.draw(screen)
+
+        projectiles = [p for p in projectiles if not p.hit]
+
+        enemies = [e for e in enemies if e.health > 0 and not e.reached_end]
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -64,7 +78,6 @@ def main():
                 grid_x = (mouse_x // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
                 grid_y = (mouse_y // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
 
-                # Avoid placing multiple towers in same cell
                 if not any(t.x == grid_x and t.y == grid_y for t in towers):
                     towers.append(Tower(grid_x, grid_y))
 
