@@ -1,5 +1,6 @@
 import pygame
 import sys
+import math
 from enemy import Enemy
 from tower import Tower
 from projectile import Projectile
@@ -42,18 +43,51 @@ def main():
     spawn_interval = 120  
     projectiles = []
 
+    lives = 10
+    wave = 1
+    enemy_per = 5
+    spawned_thiswave = 0
+    spawn_timer = 0
+    spawn_interval = 60
+    wave_cooldown = 180
+    wave_timer = 0
+
+    money = 100
+    tower_cost = 25
+    enemy_reward = 15
+
+    font = pygame.font.SysFont(None, 28)
+
     while running:
         screen.fill(BACKGROUND_COLOR)
         draw_grid()
 
-        spawn_timer += 1
-        if spawn_timer >= spawn_interval:
-            enemies.append(Enemy(path))
-            spawn_timer = 0
+        if spawned_thiswave < enemy_per:
+            spawn_timer +=1
+            if spawn_timer >= spawn_interval:
+                enemies.append(Enemy(path))
+                spawned_thiswave += 1
+                spawn_timer = 0
+        else:
+            if not enemies:
+                wave_timer += 1
+                if wave_timer < wave_cooldown:
+                    wave += 1
+                    spawned_thiswave = 0
+                    wave_timer = 0
+                    enemy_per += 2
 
         for enemy in enemies:
             enemy.update()
             enemy.draw(screen)
+            if enemy.reached_end:
+                lives -= 1
+
+        for e in enemies:
+            if e.health <= 0:
+                money += 10
+
+        enemies = [e for e in enemies if e.health > 0 and not e.reached_end]
 
         for tower in towers:
             proj = tower.update(enemies)
@@ -67,19 +101,42 @@ def main():
 
         projectiles = [p for p in projectiles if not p.hit]
 
-        enemies = [e for e in enemies if e.health > 0 and not e.reached_end]
+        wave_text = font.render(f"Wave: {wave}", True, WHITE)
+        lives_text = font.render(f"Lives: {lives}", True, (255, 100, 100))
+        money_text = font.render(f"Money: {money}", True, (255, 255, 100))
+        screen.blit(wave_text, (10, 10))
+        screen.blit(lives_text, (10, 40))
+        screen.blit(money_text,(10,70))
+
+        if lives <= 0:
+            game_over = font.render("GAME OVER", True, (255, 0, 0))
+            screen.blit(game_over, (SCREEN_WIDTH // 2-80, SCREEN_HEIGHT // 2))
+            pygame.display.flip()
+            pygame.time.wait(3000)
+            running = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
                 grid_x = (mouse_x // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
                 grid_y = (mouse_y // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
 
-                if not any(t.x == grid_x and t.y == grid_y for t in towers):
-                    towers.append(Tower(grid_x, grid_y))
+                if event.button == 1:  # Left click = place tower
+                    if not any(t.x == grid_x and t.y == grid_y for t in towers) and money >= tower_cost:
+                        towers.append(Tower(grid_x, grid_y))
+                        money -= tower_cost
+
+                elif event.button == 3:  # Right click = upgrade tower
+                    for tower in towers:
+                        if math.hypot(tower.x - mouse_x, tower.y - mouse_y) < GRID_SIZE:
+                            if money >= tower.upgrade_cost:
+                                tower.upgrade()
+                                money -= tower.upgrade_cost
+                                print(f"Tower upgraded to level {tower.level}")
+                            break
 
         pygame.display.flip()
         clock.tick(60)
