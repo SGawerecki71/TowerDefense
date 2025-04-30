@@ -4,6 +4,7 @@ import math
 from enemy import Enemy
 from tower import Tower
 from projectile import Projectile
+from quadtree import Quadtree, Rectangle, Point
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -82,6 +83,12 @@ def main():
             enemy.draw(screen)
             if enemy.reached_end:
                 lives -= 1
+        
+        boundary = Rectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+        qt = Quadtree(boundary, 4)
+
+        for enemy in enemies:
+            qt.insert(Point(enemy.x, enemy.y, enemy))
 
         for e in enemies:
             if e.health <= 0:
@@ -90,11 +97,13 @@ def main():
         enemies = [e for e in enemies if e.health > 0 and not e.reached_end]
 
         for tower in towers:
-            proj = tower.update(enemies)
+            nearby = []
+            qt.query_circle(tower.x, tower.y, tower.range, nearby)
+            proj = tower.update(nearby)
             if proj:
                 projectiles.append(proj)
             tower.draw(screen)
-
+            
         for proj in projectiles:
             proj.update()
             proj.draw(screen)
@@ -124,12 +133,12 @@ def main():
                 grid_x = (mouse_x // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
                 grid_y = (mouse_y // GRID_SIZE) * GRID_SIZE + GRID_SIZE // 2
 
-                if event.button == 1:  # Left click = place tower
+                if event.button == 1: 
                     if not any(t.x == grid_x and t.y == grid_y for t in towers) and money >= tower_cost:
                         towers.append(Tower(grid_x, grid_y))
                         money -= tower_cost
 
-                elif event.button == 3:  # Right click = upgrade tower
+                elif event.button == 3:
                     for tower in towers:
                         if math.hypot(tower.x - mouse_x, tower.y - mouse_y) < GRID_SIZE:
                             if money >= tower.upgrade_cost:
