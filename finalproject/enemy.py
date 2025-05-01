@@ -13,7 +13,6 @@ class Enemy:
 
     def update(self):
         if self.path_index >= len(self.path) - 1:
-            # Only mark as reached end once enemy is at the final tile
             if (abs(self.x - self.path[-1][0]) < 1 and abs(self.y - self.path[-1][1]) < 1):
                 self.reached_end = True
             return

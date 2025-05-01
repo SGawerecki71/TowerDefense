@@ -14,9 +14,11 @@ TOOLBAR_HEIGHT = 100
 
 WIDTH, HEIGHT = 800, 600
 
+stars = [(random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT)) for _ in range(150)]
+
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
-BACKGROUND_COLOR = (30, 30, 30)
+BACKGROUND_COLOR = (10, 10, 30)
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -33,7 +35,7 @@ def build_path():
     return [(0, 100), (200, 100), (200, 300), (600, 300), (600, 150), (800, 150)]
 
 def draw_path(path_points):
-    path_color = (100, 100, 100)  # Gray road color
+    path_color = (100, 100, 100)  
     path_width = 40
 
     for i in range(len(path_points) - 1):
@@ -41,30 +43,59 @@ def draw_path(path_points):
         end = path_points[i + 1]
         pygame.draw.line(screen, path_color, start, end, path_width)
 
+def draw_stars():
+    for i in range(len(stars)):
+        x, y = stars[i]
+        x += 0.1 
+        if x > SCREEN_WIDTH:
+            x = 0
+            y = random.randint(0, SCREEN_HEIGHT)
+        stars[i] = (x, y)
+
+        brightness = random.randint(180, 255)
+        pygame.draw.circle(screen, (brightness, brightness, brightness), (int(x), int(y)), 1)
 
 def start_menu():
     menu_font = pygame.font.SysFont(None, 48)
     small_font = pygame.font.SysFont(None, 32)
-    title_text = menu_font.render("Tower Defense", True, WHITE)
+    #title_text = menu_font.render("Space Tower Defense", True, WHITE)
+    title_string = "Space Tower Defense"
 
     start_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 - 50, 200, 50)
     quit_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 20, 200, 50)
 
     stars = [(random.randint(0, SCREEN_WIDTH), random.randint(0, SCREEN_HEIGHT)) for _ in range(150)]
 
+    float_offset = 0
+    float_direction = 1
+    t = 0
+
     while True:
         screen.fill((10, 10, 30))
-        screen.blit(title_text, (WIDTH // 2 - title_text.get_width() // 2, 100))
 
-        for star in stars:
-            brightness = random.randint(180, 255)
-            pygame.draw.circle(screen, (brightness, brightness, brightness), star, 1)
+        t += 0.03
+        float_offset = math.sin(t) * 10
+        title_x = WIDTH // 2
+        title_y = 100 + float_offset
+
+        title_string = "Space Tower Defense"
+        main_title = menu_font.render(title_string, True, WHITE)
+
+        for glow_size in range(1, 6):
+            glow_text = menu_font.render(title_string, True, (50, 150, 255))
+            glow_text.set_alpha(25)
+            screen.blit(glow_text, (title_x - glow_text.get_width() // 2 - glow_size,
+                                    title_y - glow_size))
+
+        screen.blit(main_title, (title_x - main_title.get_width() // 2, title_y))
+
+        draw_stars()
 
         pygame.draw.rect(screen, (0, 150, 0), start_button)
         pygame.draw.rect(screen, (150, 0, 0), quit_button)
-
         screen.blit(small_font.render("Start Game", True, WHITE), (start_button.x + 40, start_button.y + 10))
         screen.blit(small_font.render("Quit", True, WHITE), (quit_button.x + 75, quit_button.y + 10))
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -112,7 +143,8 @@ def main():
 
     while running:
         screen.fill(BACKGROUND_COLOR)
-        draw_grid()
+        #draw_grid()
+        draw_stars()
         draw_path(path)
 
         if wave_in_progress and spawned_thiswave < enemy_per:
@@ -218,7 +250,7 @@ def main():
                     spawn_interval = max(15, spawn_interval - 5)
                     continue
 
-                if event.button == 1:  # Left click
+                if event.button == 1: 
                     if basic_button_rect.collidepoint(mouse_x, mouse_y):
                         current_tower_type = "basic"
                         print("Selected: Basic Tower")
@@ -263,7 +295,6 @@ def main():
         sniper_label = label_font.render("Sniper", True, WHITE)
         rapid_label = label_font.render("Rapid", True, WHITE)
 
-        # Position text just above each button
         screen.blit(basic_label, (basic_button_rect.centerx - basic_label.get_width() // 2, basic_button_rect.y - 20))
         screen.blit(sniper_label, (sniper_button_rect.centerx - sniper_label.get_width() // 2, sniper_button_rect.y - 20))
         screen.blit(rapid_label, (rapid_button_rect.centerx - rapid_label.get_width() // 2, rapid_button_rect.y - 20))
