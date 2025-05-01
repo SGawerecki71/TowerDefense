@@ -1,19 +1,21 @@
 import pygame
 
 class Enemy:
-    def __init__(self, path):
+    def __init__(self, path, health = 30):
         self.path = path
         self.path_index = 0
         self.x, self.y = self.path[self.path_index]
         self.speed = 2
         self.radius = 10
         self.reached_end = False
-        self.max_health = 100
-        self.health = 100
+        self.max_health = health
+        self.health = health
 
     def update(self):
         if self.path_index >= len(self.path) - 1:
-            self.reached_end = True
+            # Only mark as reached end once enemy is at the final tile
+            if (abs(self.x - self.path[-1][0]) < 1 and abs(self.y - self.path[-1][1]) < 1):
+                self.reached_end = True
             return
 
         target_x, target_y = self.path[self.path_index + 1]

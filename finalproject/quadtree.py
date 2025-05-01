@@ -15,17 +15,15 @@ class Rectangle:
                 self.y <= point.y < self.y + self.h)
     
     def intersects(self, circle_x, circle_y, radius):
-        x_dist = abs(circle_x - (self.x + self.w / 2))
-        y_dist = abs(circle_y - (self.y - self.h / 2))
-        
-        if x_dist > (self.w / 2 + radius): return False
-        if y_dist > (self.h / 2 + radius): return False
+    # Find the closest point on the rectangle to the circle center
+        closest_x = max(self.x, min(circle_x, self.x + self.w))
+        closest_y = max(self.y, min(circle_y, self.y + self.h))
 
-        if x_dist <= (self.w / 2): return True
-        if y_dist <= (self.h / 2): return True
+    # Calculate distance from circle center to closest point
+        dx = circle_x - closest_x
+        dy = circle_y - closest_y
 
-        corner_dist_sq = (x_dist - self.w / 2) ** 2 + (y_dist - self.h / 2) ** 2
-        return corner_dist_sq <= radius ** 2
+        return (dx * dx + dy * dy) <= (radius * radius)
     
 class Quadtree:
     def __init__(self, boundary, capacity):
@@ -61,7 +59,9 @@ class Quadtree:
             return
 
         for p in self.points:
-            if (p.x - x) ** 2 + (p.y - y) ** 2 <= radius ** 2:
+            dx = p.x - x
+            dy = p.y - y
+            if dx * dx + dy * dy <= radius * radius:
                 found.append(p.obj)
 
         if self.divided:

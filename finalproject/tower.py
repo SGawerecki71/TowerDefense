@@ -5,7 +5,7 @@ from projectile import Projectile
 WHITE = (255, 255, 255)
 
 class Tower:
-    def __init__(self, x, y):
+    def __init__(self, x, y, tower_type="basic"):
         self.x = x
         self.y = y
         self.range = 100
@@ -16,6 +16,23 @@ class Tower:
         self.damage = 20
         self.level = 1
         self.upgrade_cost = 50
+        self.type = tower_type
+
+        if self.type == "basic":
+            self.range = 100
+            self.damage = 20
+            self.fire_rate = 60
+            self.color = (0, 0, 255)
+        if self.type == "sniper":
+            self.range = 250
+            self.damage = 80
+            self.fire_rate = 120
+            self.color = (0, 255, 0)
+        if self.type == "rapid":
+            self.range = 100
+            self.damage = 20
+            self.fire_rate = 60
+            self.color = (255, 0, 0)
 
     def in_range(self, enemy):
         dist = math.hypot(self.x -enemy.x, self.y - enemy.y)
@@ -29,7 +46,7 @@ class Tower:
         self.upgrade_cost += 50
 
     def draw(self, surface):
-        pygame.draw.circle(surface, (0, 0, 255), (self.x, self.y), 15)
+        pygame.draw.circle(surface, self.color, (self.x, self.y), 15)
         pygame.draw.circle(surface, (0, 100, 255), (self.x, self.y), self.range, 1)  # Show range
 
         font = pygame.font.SysFont(None, 18)
@@ -51,4 +68,5 @@ class Tower:
                 enemy.health -= 20
                 self.cooldown = self.fire_rate
                 return Projectile(self.x, self.y, enemy, self.damage)
-            return None
+            
+        return None
